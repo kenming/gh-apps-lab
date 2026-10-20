@@ -1,5 +1,5 @@
 import './style.css';
-import { BUDGET_KEY, STORAGE_KEY, categoryTotals, totalForMonth, validateExpense, type Category, type Expense } from './expense';
+import { BUDGET_KEY, STORAGE_KEY, categoryTotals, getBudgetUsage, totalForMonth, validateExpense, type Category, type Expense } from './expense';
 
 function readExpenses(): Expense[] {
   try { const raw: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]'); return Array.isArray(raw) ? raw.filter(isExpense) : []; }
@@ -49,8 +49,14 @@ function render() {
   const total = totalForMonth(items, currentMonth);
   $('total').textContent = currency(total);
   $('month-label').textContent = `${yyyy} 年 ${Number(mm)} 月`;
-  $('budget-status').textContent = budget <= 0 ? '尚未設定預算' : total > budget ? `超出預算 ${currency(total - budget)}` : `剩餘預算 ${currency(budget - total)}`;
-  $('budget-status').className = budget > 0 && total > budget ? 'warning' : '';
+  const usage = getBudgetUsage(total, budget);
+  const budgetMessage = usage.status === 'unset' ? '尚未設定預算'
+    : usage.status === 'over' ? `超出預算 ${currency(total - budget)}`
+    : `剩餘預算 ${currency(budget - total)}`;
+  const percentageMessage = usage.percentage === null ? '' : `（使用率 ${Math.round(usage.percentage)}%）`;
+  const nearMessage = usage.status === 'near' ? ' · 接近預算上限' : '';
+  $('budget-status').textContent = `${budgetMessage}${percentageMessage}${nearMessage}`;
+  $('budget-status').className = usage.status === 'over' || usage.status === 'near' ? 'warning' : '';
   const cats = categoryTotals(items, currentMonth);
   $('categories').replaceChildren(...Object.entries(cats).map(([name, amount]) => {
     const row = document.createElement('div');
