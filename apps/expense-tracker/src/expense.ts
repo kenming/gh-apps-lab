@@ -15,3 +15,10 @@ export function validateExpense(title: string, amount: number): string | null {
   if (!Number.isFinite(amount) || amount <= 0) return '金額必須大於零';
   return null;
 }
+
+export type BudgetUsage = { percentage: number | null; status: 'unset' | 'normal' | 'near' | 'over' };
+export function getBudgetUsage(total: number, budget: number): BudgetUsage {
+  if (!Number.isFinite(budget) || budget <= 0) return { percentage: null, status: 'unset' };
+  const percentage = total / budget * 100;
+  return { percentage, status: total > budget ? 'over' : percentage >= 80 ? 'near' : 'normal' };
+}
