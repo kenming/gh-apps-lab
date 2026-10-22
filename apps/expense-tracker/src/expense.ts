@@ -14,6 +14,10 @@ export function categoryTotals(items: Expense[], month: string): Record<Category
   return result;
 }
 
+export function filterExpenses(items: Expense[], month: string, category: Category | '全部'): Expense[] {
+  return items.filter((item) => item.date.startsWith(month) && (category === '全部' || item.category === category));
+}
+
 export function monthlySummaries(items: Expense[]): MonthlySummary[] {
   const summaries = new Map<string, MonthlySummary>();
   for (const item of items) {
