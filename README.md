@@ -8,7 +8,7 @@ A collection of lightweight browser apps for demonstrating **ChatGPT + GitHub + 
 | --- | --- | --- |
 | 日常記帳 Expense Tracker | [apps/expense-tracker](apps/expense-tracker) | [Open Expense Tracker](https://kenming.github.io/gh-apps-lab/expense-tracker/) |
 
-Features: create and delete expenses, monthly total, category totals, monthly budget and over-budget warning. Data is stored in the **current browser's LocalStorage** (no cloud sync).
+Features: create and delete expenses, monthly total, category totals, monthly budget and over-budget warning, plus expense-list category filtering (全部、餐飲、交通、購物、其他). Category filtering only affects the visible expense records and count; monthly totals, category statistics and budget calculations remain unchanged. Data is stored in the **current browser's LocalStorage** (no cloud sync).
 
 ## Cloud development workflow
 

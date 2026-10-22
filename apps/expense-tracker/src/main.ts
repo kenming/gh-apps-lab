@@ -1,5 +1,5 @@
 import './style.css';
-import { BUDGET_KEY, STORAGE_KEY, categoryTotals, monthlySummaries, totalForMonth, validateExpense, type Category, type Expense } from './expense';
+import { BUDGET_KEY, STORAGE_KEY, categoryTotals, filterExpenses, monthlySummaries, totalForMonth, validateExpense, type Category, type Expense } from './expense';
 
 function readExpenses(): Expense[] {
   try { const raw: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]'); return Array.isArray(raw) ? raw.filter(isExpense) : []; }
@@ -22,6 +22,7 @@ const yyyy = today.getFullYear();
 const mm = String(today.getMonth() + 1).padStart(2, '0');
 const currentMonth = `${yyyy}-${mm}`;
 let selectedMonth = currentMonth;
+let selectedCategory: Category | '全部' = '全部';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -51,7 +52,7 @@ app.innerHTML = `
 
   <section class="panel"><h2>分類統計</h2><div id="categories" class="categories"></div></section>
 
-  <section class="panel"><div class="section-head"><h2>支出紀錄</h2><span id="count"></span></div><ul id="expense-list" class="records"></ul></section>
+  <section class="panel"><div class="section-head"><h2>支出紀錄</h2><span id="count"></span></div><div class="month-toolbar"><label for="category-filter">類別篩選</label><select id="category-filter"><option>全部</option><option>餐飲</option><option>交通</option><option>購物</option><option>其他</option></select></div><ul id="expense-list" class="records"></ul></section>
 
   <section class="panel"><div class="section-head"><h2>各月份支出彙整</h2><span id="month-count"></span></div><div id="monthly-summary" class="monthly-summary"></div></section>
 
@@ -70,6 +71,9 @@ dateInput.value = `${currentMonth}-${String(today.getDate()).padStart(2, '0')}`;
 
 const monthPicker = $('month-picker') as HTMLInputElement;
 monthPicker.value = selectedMonth;
+
+const categoryFilter = $('category-filter') as HTMLSelectElement;
+categoryFilter.value = selectedCategory;
 
 const budgetInput = $('budget') as HTMLInputElement;
 budgetInput.value = budget ? String(budget) : '';
@@ -90,13 +94,13 @@ function render() {
     return row;
   }));
 
-  const monthly = items.filter((e) => e.date.startsWith(selectedMonth)).sort((a, b) => b.date.localeCompare(a.date));
+  const monthly = filterExpenses(items, selectedMonth, selectedCategory).sort((a, b) => b.date.localeCompare(a.date));
   $('count').textContent = `${monthly.length} 筆`;
   const list = $('expense-list');
   list.replaceChildren();
   if (!monthly.length) {
     const empty = document.createElement('li');
-    empty.textContent = `${monthLabel(selectedMonth)}還沒有紀錄。`;
+    empty.textContent = selectedCategory === '全部' ? `${monthLabel(selectedMonth)}還沒有紀錄。` : `${monthLabel(selectedMonth)}沒有「${selectedCategory}」類別的紀錄。`;
     empty.className = 'empty';
     list.append(empty);
   }
@@ -146,6 +150,11 @@ function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   render();
 }
+
+categoryFilter.addEventListener('change', () => {
+  selectedCategory = categoryFilter.value as Category | '全部';
+  render();
+});
 
 monthPicker.addEventListener('change', () => {
   if (!/^\d{4}-\d{2}$/.test(monthPicker.value)) return;
